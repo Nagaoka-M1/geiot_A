@@ -68,10 +68,12 @@
     </div>
 
     <div class="text-center mb-8">
-        <button class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105" onclick="alert('出品機能は現在開発中です！')">
-            出品はこちら
-        </button>
+        <a href="{{ url_for('producer') }}"
+        class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 inline-block">
+            生産者はこちら
+        </a>
     </div>
+
 
     <!-- Footer Section -->
     <footer class="bg-gray-800 text-white p-6 mt-10">
