@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生産者ページ - 新鮮野菜マルシェ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font and general body styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc; /* Light gray background */
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Styles for active tab */
+        .tab-button.active {
+            background-color: #10B981; /* Green-500 */
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <!-- Header Section -->
+    <header class="bg-green-700 text-white p-4 shadow-md">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-3xl font-bold mb-2 md:mb-0">
+                <a href="index.html" class="hover:text-green-200 transition duration-300">新鮮野菜マルシェ</a>
+            </h1>
+            <nav>
+                <ul class="flex space-x-4">
+                    <li><a href="index.html" class="hover:text-green-200 transition duration-300">ホーム</a></li>
+                    <li><a href="#" class="hover:text-green-200 transition duration-300">商品一覧</a></li>
+                    <li><a href="#" class="hover:text-green-200 transition duration-300">お問い合わせ</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Section -->
+    <main class="container mx-auto p-6 flex-grow">
+        <h2 class="text-4xl font-extrabold text-center text-green-800 mb-8">生産者ページ</h2>
+
+        <!-- Tab Navigation -->
+        <div class="flex justify-center mb-8">
+            <button id="productFormTab" class="tab-button px-6 py-3 rounded-l-lg bg-gray-200 hover:bg-gray-300 transition duration-300 active">商品出品フォーム</button>
+            <button id="profileEditTab" class="tab-button px-6 py-3 bg-gray-200 hover:bg-gray-300 transition duration-300">プロフィール編集</button>
+            <button id="eventPostTab" class="tab-button px-6 py-3 rounded-r-lg bg-gray-200 hover:bg-gray-300 transition duration-300">イベント告知投稿</button>
+        </div>
+
+        <!-- Tab Content: Product Listing Form -->
+        <div id="productFormContent" class="tab-content bg-white p-8 rounded-xl shadow-lg mb-8">
+            <h3 class="text-2xl font-bold text-green-700 mb-6">商品出品フォーム</h3>
+            <form id="productListingForm">
+                <div class="mb-4">
+                    <label for="productName" class="block text-gray-700 text-sm font-bold mb-2">商品名:</label>
+                    <input type="text" id="productName" name="productName" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: 新鮮なトマト" required>
+                </div>
+                <div class="mb-4">
+                    <label for="productPrice" class="block text-gray-700 text-sm font-bold mb-2">価格 (円):</label>
+                    <input type="number" id="productPrice" name="productPrice" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: 350" min="0" required>
+                </div>
+                <div class="mb-4">
+                    <label for="productDescription" class="block text-gray-700 text-sm font-bold mb-2">商品説明:</label>
+                    <textarea id="productDescription" name="productDescription" rows="5" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="商品の特徴やこだわりを詳しく入力してください。" required></textarea>
+                </div>
+                <div class="mb-6">
+                    <label for="productImage" class="block text-gray-700 text-sm font-bold mb-2">商品画像:</label>
+                    <input type="file" id="productImage" name="productImage" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">商品を出品</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tab Content: Profile Editing -->
+        <div id="profileEditContent" class="tab-content bg-white p-8 rounded-xl shadow-lg mb-8 hidden">
+            <h3 class="text-2xl font-bold text-green-700 mb-6">プロフィール編集</h3>
+            <form id="profileEditForm">
+                <div class="mb-4">
+                    <label for="producerName" class="block text-gray-700 text-sm font-bold mb-2">生産者名:</label>
+                    <input type="text" id="producerName" name="producerName" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: 山田農園" required>
+                </div>
+                <div class="mb-4">
+                    <label for="producerBio" class="block text-gray-700 text-sm font-bold mb-2">自己紹介:</label>
+                    <textarea id="producerBio" name="producerBio" rows="5" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="農園の紹介や野菜へのこだわりを入力してください。" required></textarea>
+                </div>
+                <div class="mb-6">
+                    <label for="producerContact" class="block text-gray-700 text-sm font-bold mb-2">連絡先メールアドレス:</label>
+                    <input type="email" id="producerContact" name="producerContact" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="your@example.com" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">プロフィールを更新</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tab Content: Event/Announcement Posting -->
+        <div id="eventPostContent" class="tab-content bg-white p-8 rounded-xl shadow-lg mb-8 hidden">
+            <h3 class="text-2xl font-bold text-green-700 mb-6">イベント告知投稿</h3>
+            <form id="eventPostForm">
+                <div class="mb-4">
+                    <label for="eventTitle" class="block text-gray-700 text-sm font-bold mb-2">タイトル:</label>
+                    <input type="text" id="eventTitle" name="eventTitle" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: 収穫体験イベント開催！" required>
+                </div>
+                <div class="mb-4">
+                    <label for="eventDate" class="block text-gray-700 text-sm font-bold mb-2">開催日時:</label>
+                    <input type="datetime-local" id="eventDate" name="eventDate" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="eventDescription" class="block text-gray-700 text-sm font-bold mb-2">詳細:</label>
+                    <textarea id="eventDescription" name="eventDescription" rows="5" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="イベントの詳細や参加方法を入力してください。" required></textarea>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">イベントを投稿</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="bg-gray-800 text-white p-6 mt-10">
+        <div class="container mx-auto text-center text-sm">
+            &copy; 2025 新鮮野菜マルシェ. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        // Get tab buttons and content sections
+        const productFormTab = document.getElementById('productFormTab');
+        const profileEditTab = document.getElementById('profileEditTab');
+        const eventPostTab = document.getElementById('eventPostTab');
+
+        const productFormContent = document.getElementById('productFormContent');
+        const profileEditContent = document.getElementById('profileEditContent');
+        const eventPostContent = document.getElementById('eventPostContent');
+
+        // Get all tab buttons for easy iteration
+        const tabButtons = [productFormTab, profileEditTab, eventPostTab];
+        const tabContents = [productFormContent, profileEditContent, eventPostContent];
+
+        // Function to show a specific tab content and activate its button
+        function showTab(tabToShow, buttonToActivate) {
+            // Hide all tab contents
+            tabContents.forEach(content => content.classList.add('hidden'));
+            // Deactivate all tab buttons
+            tabButtons.forEach(button => button.classList.remove('active'));
+
+            // Show the selected tab content
+            tabToShow.classList.remove('hidden');
+            // Activate the selected tab button
+            buttonToActivate.classList.add('active');
+        }
+
+        // Add event listeners to tab buttons
+        productFormTab.addEventListener('click', () => showTab(productFormContent, productFormTab));
+        profileEditTab.addEventListener('click', () => showTab(profileEditContent, profileEditTab));
+        eventPostTab.addEventListener('click', () => showTab(eventPostContent, eventPostTab));
+
+        // Form submission handlers (for demo purposes)
+        document.getElementById('productListingForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            alert('商品が出品されました！ (デモ)');
+            this.reset(); // Clear the form
+        });
+
+        document.getElementById('profileEditForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            alert('プロフィールが更新されました！ (デモ)');
+            this.reset(); // Clear the form
+        });
+
+        document.getElementById('eventPostForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            alert('イベント告知が投稿されました！ (デモ)');
+            this.reset(); // Clear the form
+        });
+
+        // Initial display: Show product form by default
+        document.addEventListener('DOMContentLoaded', () => {
+            showTab(productFormContent, productFormTab);
+        });
+    </script>
+</body>
+</html>

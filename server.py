@@ -115,5 +115,12 @@ def consumer_register():
 def index():
     return render_template('index.html')
 
+@app.route('/producer', methods=['GET', 'POST'])
+def producer():
+    if request.method == 'POST':
+        pass
+    return render_template('producer_dashboard.html')
+
+
 if __name__ == '__main__':
     app.run(debug=True)
