@@ -115,6 +115,11 @@ def consumer_register():
 def index():
     return render_template('index.html')
 
+# メインページ（仮）
+@app.route('/producer')
+def producer():
+    return render_template('producer_dashboard.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
 
