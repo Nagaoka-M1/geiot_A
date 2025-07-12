@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>プロフィール</title>
-    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
@@ -12,21 +12,21 @@
         <h3 class="card-title">プロフィール</h3>
 
         <div class="profile-header">
-            <img src="https://pbs.twimg.com/profile_images/1930450937124139008/3akLDAFa_400x400.jpg" alt="プロフィールアイコン">
-            <h2 class="account-name">立花考志 さん</h2>
+            <!-- プロフィール画像を動的に表示 -->
+            <img src="{{ producer.profile_image if producer.profile_image else 'https://pbs.twimg.com/profile_images/1930450937124139008/3akLDAFa_400x400.jpg' }}" alt="プロフィールアイコン">
+            <h2 class="account-name">{{ producer.account_name }} さん</h2>
         </div>
 
         <p class="bio">
-            こんにちは！ご覧いただきありがとうございます。<br>
-            Japanese Trump立花考志です。<br>
-            不法移民を許さない。
+            {{ producer.bio if producer.bio else '自己紹介がまだありません。' }}
         </p>
 
         <div class="video-container">
+            <!-- YouTube 動画を動的に表示 -->
             <iframe
                 width="560"
                 height="315"
-                src="https://www.youtube.com/embed/nf12HjJd4g0?si=RinXHtxi7Ogq5yuH　としてください"
+                src="{{ producer.youtube_video if producer.youtube_video else 'https://www.youtube.com/embed/nf12HjJd4g0?si=RinXHtxi7Ogq5yuH' }}"
                 title="YouTube video player"
                 frameborder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -36,5 +36,6 @@
     </div>
 
     <a href="https://x.com/nhkparty/status/1943609873427751160" class="fixed-bottom-btn">農業イベントに参加！</a>
-    </body>
+    
+</body>
 </html>
