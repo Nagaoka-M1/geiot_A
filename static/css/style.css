@@ -1,13 +1,9 @@
-/* Custom styles for Inter font and general body styling */
 body {
     font-family: 'Inter', sans-serif;
     background-color: #f7fafc; /* Light gray background */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
     margin: 0;
     padding-bottom: 80px; /* ボタンがコンテンツに隠れないように余白を追加 */
+    /* scroll-blockingな指定は削除 */
 }
 
 /* Custom scrollbar for better aesthetics */
