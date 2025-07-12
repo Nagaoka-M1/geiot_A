@@ -18,10 +18,51 @@ class Consumer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
+# 生産者モデル（消費者用）
+class Producer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    account_name = db.Column(db.String(100), nullable=False)
+    bio = db.Column(db.String(1000), nullable=False)
+    profile_image = db.Column(db.String(200), nullable=True)
+    youtube_video = db.Column(db.String(200), nullable=True)
 
 # アプリケーションコンテキストを手動で開始（データベース作成）
 with app.app_context():
     db.create_all()
+
+# 初期データを追加（もしデータが空の場合）
+with app.app_context():
+    if not Producer.query.first():
+        producer = Producer(account_name='立花考志', bio='日本のトランプです。', profile_image='https://pbs.twimg.com/profile_images/1930450937124139008/3akLDAFa_400x400.jpg', youtube_video='https://www.youtube.com/embed/nf12HjJd4g0?si=RinXHtxi7Ogq5yuH')
+        db.session.add(producer)
+        db.session.commit()
+
+# 生産者用プロフィール表示ページ
+@app.route('/producer/profile')
+def producer_profile():
+    # サンプルで消費者1のデータを仮に表示
+    producer = Producer.query.first()  # 最初のプロデューサーを取得
+    return render_template('preview_profile.html', producer=producer)
+
+# 生産者用プロフィール編集ページ
+@app.route('/producer/edit-profile', methods=['GET', 'POST'])
+def producer_edit_profile():
+    producer = Producer.query.first()  # 最初のプロデューサーを取得
+
+    if request.method == 'POST':
+        producer.account_name = request.form['account_name']
+        producer.bio = request.form['bio']
+        producer.profile_image = request.form['profile_image']
+        producer.youtube_video = request.form['youtube_video']
+        
+        # 変更をデータベースに保存
+        db.session.commit()
+        
+        flash('プロフィールが更新されました。', 'success')
+        return redirect(url_for('producer_profile'))  # 編集後にプロフィールページへリダイレクト
+
+    return render_template('edit_profile.html', producer=producer)
+
 
 # 消費者用ログインページ
 @app.route('/consumer/login', methods=['GET', 'POST'])
