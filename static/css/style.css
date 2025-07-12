@@ -1,14 +1,31 @@
 body {
-    font-family: sans-serif;
-    background-color: #f4f4f4;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    font-family: 'Inter', sans-serif;
+    background-color: #f7fafc; /* Light gray background */
     margin: 0;
     padding-bottom: 80px; /* ボタンがコンテンツに隠れないように余白を追加 */
+    /* scroll-blockingな指定は削除 */
 }
 
+/* Custom scrollbar for better aesthetics */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Profile Page Styles */
 .profile-container {
     background-color: #fff;
     padding: 20px;
