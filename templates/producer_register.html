@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生産者登録 - 新鮮野菜マルシェ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100 items-center justify-center">
+    <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
+        <h2 class="text-3xl font-bold text-center text-green-700 mb-6">生産者アカウント登録</h2>
+
+        <div class="mb-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="bg-{{ 'green' if category == 'success' else 'red' if category == 'danger' else 'blue' }}-500 text-white p-3 rounded-lg shadow-md mb-2">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <form action="{{ url_for('producer_register') }}" method="POST">
+            <div class="mb-4">
+                <label for="username" class="block text-gray-700 text-sm font-bold mb-2">ユーザー名:</label>
+                <input type="text" id="username" name="username" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="ログイン用ユーザー名" required>
+            </div>
+            <div class="mb-4">
+                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">パスワード:</label>
+                <input type="password" id="password" name="password" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="パスワード" required>
+            </div>
+            <div class="mb-6">
+                <label for="password_confirm" class="block text-gray-700 text-sm font-bold mb-2">パスワード (確認):</label>
+                <input type="password" id="password_confirm" name="password_confirm" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="パスワードをもう一度入力" required>
+            </div>
+            <div class="mb-4">
+                <label for="account_name" class="block text-gray-700 text-sm font-bold mb-2">生産者名 (表示名):</label>
+                <input type="text" id="account_name" name="account_name" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: 山田農園" required>
+            </div>
+            <div class="mb-4">
+                <label for="bio" class="block text-gray-700 text-sm font-bold mb-2">自己紹介 (任意):</label>
+                <textarea id="bio" name="bio" rows="3" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="農園の紹介や野菜へのこだわり"></textarea>
+            </div>
+            <div class="mb-4">
+                <label for="profile_image" class="block text-gray-700 text-sm font-bold mb-2">プロフィール画像URL (任意):</label>
+                <input type="text" id="profile_image" name="profile_image" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: https://example.com/your_profile.jpg">
+            </div>
+            <div class="mb-6">
+                <label for="youtube_video" class="block text-gray-700 text-sm font-bold mb-2">YouTube動画URL (任意):</label>
+                <input type="text" id="youtube_video" name="youtube_video" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: https://www.youtube.com/watch?v=...">
+            </div>
+
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">登録する</button>
+            </div>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('producer_login') }}" class="inline-block align-baseline font-bold text-sm text-green-600 hover:text-green-800">
+                    すでにアカウントをお持ちですか？ログインはこちら
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // フラッシュメッセージを自動で消す
+        document.addEventListener('DOMContentLoaded', () => {
+            const flashMessages = document.querySelectorAll('.mb-4 > div');
+            flashMessages.forEach(msg => {
+                setTimeout(() => {
+                    msg.remove();
+                }, 5000); // 5秒後に消える
+            });
+        });
+    </script>
+</body>
+</html>
