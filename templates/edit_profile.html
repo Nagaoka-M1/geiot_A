@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロフィール編集</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Bootstrap CDN (簡易的に利用) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEJr+Ue7IBf6u6+0p8v5zbo/JF7fS8i5Qn6LnpLRpgC4D4M7zOjjZnwiEl2J5" crossorigin="anonymous">
+</head>
+<body>
+
+    <div class="container mt-5">
+        <h3 class="card-title text-center mb-4">プロフィール編集</h3>
+
+        <form method="POST" action="/producer/edit-profile">
+            <!-- プロフィール画像 -->
+            <div class="form-group mb-3">
+                <label for="profile_image">プロフィール画像 URL</label>
+                <input type="text" class="form-control" id="profile_image" name="profile_image" value="{{ producer.profile_image }}" placeholder="画像のURLを入力">
+            </div>
+
+            <!-- 名前 -->
+            <div class="form-group mb-3">
+                <label for="account_name">名前</label>
+                <input type="text" class="form-control" id="account_name" name="account_name" value="{{ producer.account_name }}" required placeholder="名前を入力">
+            </div>
+
+            <!-- 自己紹介 -->
+            <div class="form-group mb-3">
+                <label for="bio">自己紹介</label>
+                <textarea class="form-control" id="bio" name="bio" rows="5" required placeholder="自己紹介を入力">{{ producer.bio }}</textarea>
+            </div>
+
+            <!-- YouTube 動画 -->
+            <div class="form-group mb-3">
+                <label for="youtube_video">YouTube 動画 URL</label>
+                <input type="text" class="form-control" id="youtube_video" name="youtube_video" value="{{ producer.youtube_video }}" placeholder="YouTubeのURLを入力">
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mt-3">保存</button>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS (必要に応じて追加) -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz4fnFO9gybPZmohH9eOC1E+z9h9gBCsw2p0p/8C9n8w6FfAkJc3BlTcqa" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js" integrity="sha384-pzjw8f+ua7Kw1TIq0l9dLFEfF5B5gF1p4g+Fjr0AqDlpvct0F4xQzmcj+dXjj6sA" crossorigin="anonymous"></script>
+</body>
+</html>
