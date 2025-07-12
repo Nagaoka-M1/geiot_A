@@ -4,31 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>新鮮野菜マルシェ</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="flex flex-col min-h-screen">
-    <!-- Header Section -->
     <header class="bg-green-700 text-white p-4 shadow-md">
         <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
             <h1 class="text-3xl font-bold mb-2 md:mb-0">
                 <a href="/" class="hover:text-green-200 transition duration-300">新鮮野菜マルシェ</a>
+            </h1>
             <nav>
                 <ul class="flex space-x-4">
                     <li><a href="#" class="hover:text-green-200 transition duration-300">商品一覧</a></li>
-                    <li><a href="#" class="hover:text-green-200 transition duration-300">サインイン</a></li>
+                    {% if session.consumer_id %}
+                        <li><a href="{{ url_for('consumer_logout') }}" class="hover:text-green-200 transition duration-300">ログアウト</a></li>
+                        <li><a href="{{ url_for('view_cart') }}" class="hover:text-green-200 transition duration-300">カート</a></li> {# カートへのリンクを追加 #}
+                    {% else %}
+                        <li><a href="{{ url_for('consumer_login') }}" class="hover:text-green-200 transition duration-300">サインイン</a></li>
+                    {% endif %}
                 </ul>
             </nav>
         </div>
     </header>
 
-    <!-- Main Content Section -->
     <main class="container mx-auto p-6 flex-grow">
         <h2 class="text-4xl font-extrabold text-center text-green-800 mb-8">本日の旬の野菜</h2>
 
-        <!-- Search and Filter Section -->
         <div class="mb-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <input type="text" id="searchInput" placeholder="野菜を検索..."
                    class="p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-full sm:w-1/2 md:w-1/3">
@@ -42,17 +43,41 @@
             </select>
         </div>
 
-        <!-- Product Grid -->
         <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            <!-- Product cards will be injected here by JavaScript -->
+            {% for product in products %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105" data-product-id="{{ product.id }}">
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+                <div class="p-5">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ product.name }}</h3>
+                    <p class="text-xl text-red-600 font-semibold mb-4">¥{{ product.price | int }}</p>
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ product.description }}</p>
+                    <div class="flex flex-col space-y-3">
+                        <button class="view-detail-btn bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 w-full"
+                                data-product-id="{{ product.id }}"
+                                data-product-name="{{ product.name }}"
+                                data-product-price="{{ product.price }}"
+                                data-product-description="{{ product.description }}"
+                                data-product-image="{{ product.image_url }}">
+                            詳細を見る
+                        </button>
+                        <button class="add-to-cart-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 w-full"
+                                data-product-id="{{ product.id }}">
+                            カートに追加
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% if not products %}
+                <p class="col-span-full text-center text-gray-500">現在、商品がありません。</p>
+            {% endif %}
         </div>
     </main>
 
-    <!-- Product Detail Modal -->
     <div id="productModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
             <div class="flex justify-end">
-                <button id="closeModal" class="text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-800 text-3xl font-bold">×</button>
             </div>
             <div class="flex flex-col md:flex-row gap-6 mt-4">
                 <img id="modalImage" src="" alt="Product Image" class="w-full md:w-1/2 h-64 object-cover rounded-lg shadow-md">
@@ -60,12 +85,24 @@
                     <h3 id="modalName" class="text-3xl font-bold text-green-800 mb-2"></h3>
                     <p id="modalPrice" class="text-2xl text-red-600 font-semibold mb-4"></p>
                     <p id="modalDescription" class="text-gray-700 leading-relaxed mb-6"></p>
-                    <button class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105" onclick="alert('この機能はデモです！')">
-                        カートに追加 (デモ)
+                    <button id="modalAddToCartBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                        カートに追加
                     </button>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="fixed top-4 right-4 z-50">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="bg-{{ 'green' if category == 'success' else 'red' if category == 'danger' else 'blue' }}-500 text-white p-3 rounded-lg shadow-md mb-2">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     </div>
 
     <div class="text-center mb-8">
@@ -75,16 +112,113 @@
         </a>
     </div>
 
-
-    <!-- Footer Section -->
     <footer class="bg-gray-800 text-white p-6 mt-10">
         <div class="container mx-auto text-center text-sm">
-            &copy; 2025 新鮮野菜マルシェ. All rights reserved.
+            © 2025 新鮮野菜マルシェ. All rights reserved.
         </div>
     </footer>
 
-    <!-- Custom JavaScript -->
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-</body>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const productModal = document.getElementById('productModal');
+            const closeModalBtn = document.getElementById('closeModal');
+            const modalContent = document.getElementById('modalContent');
+            const modalImage = document.getElementById('modalImage');
+            const modalName = document.getElementById('modalName');
+            const modalPrice = document.getElementById('modalPrice');
+            const modalDescription = document.getElementById('modalDescription');
+            const modalAddToCartBtn = document.getElementById('modalAddToCartBtn');
 
+            // 商品詳細モーダル表示
+            document.querySelectorAll('.view-detail-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const productId = event.target.dataset.productId;
+                    const productName = event.target.dataset.productName;
+                    const productPrice = event.target.dataset.productPrice;
+                    const productDescription = event.target.dataset.productDescription;
+                    const productImage = event.target.dataset.productImage;
+
+                    modalImage.src = productImage;
+                    modalName.textContent = productName;
+                    modalPrice.textContent = `¥${parseInt(productPrice).toLocaleString()}`;
+                    modalDescription.textContent = productDescription;
+                    modalAddToCartBtn.dataset.productId = productId; // モーダル内のカートボタンにもIDを設定
+
+                    productModal.classList.remove('hidden');
+                    setTimeout(() => {
+                        modalContent.classList.remove('scale-95', 'opacity-0');
+                        modalContent.classList.add('scale-100', 'opacity-100');
+                    }, 50);
+                });
+            });
+
+            // モーダル閉じる
+            closeModalBtn.addEventListener('click', () => {
+                modalContent.classList.remove('scale-100', 'opacity-100');
+                modalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    productModal.classList.add('hidden');
+                }, 300); // Transition duration
+            });
+
+            // モーダルの外側をクリックで閉じる
+            productModal.addEventListener('click', (event) => {
+                if (event.target === productModal) {
+                    closeModalBtn.click();
+                }
+            });
+
+            // カートに追加機能（商品一覧のボタン）
+            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const productId = event.target.dataset.productId;
+                    addToCart(productId);
+                });
+            });
+
+            // カートに追加機能（モーダル内のボタン）
+            modalAddToCartBtn.addEventListener('click', (event) => {
+                const productId = event.target.dataset.productId;
+                addToCart(productId);
+                closeModalBtn.click(); // カート追加後モーダルを閉じる
+            });
+
+            async function addToCart(productId) {
+                try {
+                    const response = await fetch('/add_to_cart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ product_id: parseInt(productId), quantity: 1 }), // 数量は一旦1固定
+                    });
+
+                    const result = await response.json();
+                    
+                    if (response.ok) { // ステータスコードが200番台の場合
+                        alert(result.message); // 成功メッセージ
+                    } else {
+                        alert(`エラー: ${result.message}`); // エラーメッセージ
+                        // ログインが必要な場合はログインページへリダイレクト
+                        if (response.status === 401) {
+                            window.location.href = '{{ url_for("consumer_login") }}';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error adding to cart:', error);
+                    alert('カートへの追加中にエラーが発生しました。');
+                }
+            }
+            
+            // フラッシュメッセージを自動で消す
+            const flashMessages = document.querySelectorAll('.fixed.top-4.right-4 > div');
+            flashMessages.forEach(msg => {
+                setTimeout(() => {
+                    msg.remove();
+                }, 5000); // 5秒後に消える
+            });
+
+        });
+    </script>
+</body>
 </html>
