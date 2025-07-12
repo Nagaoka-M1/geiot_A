@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カート - 新鮮野菜マルシェ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100">
+    <header class="bg-green-700 text-white p-4 shadow-md">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-3xl font-bold mb-2 md:mb-0">
+                <a href="/" class="hover:text-green-200 transition duration-300">新鮮野菜マルシェ</a>
+            </h1>
+            <nav>
+                <ul class="flex space-x-4">
+                    <li><a href="#" class="hover:text-green-200 transition duration-300">商品一覧</a></li>
+                    {% if session.consumer_id %}
+                        <li><a href="{{ url_for('consumer_logout') }}" class="hover:text-green-200 transition duration-300">ログアウト</a></li>
+                        <li><a href="{{ url_for('view_cart') }}" class="hover:text-green-200 transition duration-300">カート</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('consumer_login') }}" class="hover:text-green-200 transition duration-300">サインイン</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-6 flex-grow">
+        <h2 class="text-4xl font-extrabold text-center text-green-800 mb-8">あなたのカート</h2>
+
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+            {% if cart_items %}
+                <div class="space-y-6">
+                    {% for item in cart_items %}
+                    <div class="flex items-center space-x-4 border-b pb-4 last:border-b-0 last:pb-0">
+                        <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="w-24 h-24 object-cover rounded-lg shadow-md">
+                        <div class="flex-grow">
+                            <h3 class="text-xl font-semibold text-gray-800">{{ item.product.name }}</h3>
+                            <p class="text-gray-600">数量: {{ item.quantity }}</p>
+                            <p class="text-lg text-red-600 font-semibold">¥{{ (item.product.price * item.quantity) | int }}</p>
+                        </div>
+                        <div>
+                            <button class="remove-from-cart-btn bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+                                    data-cart-item-id="{{ item.id }}">
+                                削除
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-8 pt-4 border-t-2 border-green-700 text-right">
+                    <p class="text-2xl font-bold text-green-800">合計金額: ¥{{ total_price | int }}</p>
+                    <button class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 mt-6" onclick="alert('この機能はデモです！決済に進む')">
+                        購入手続きへ進む (デモ)
+                    </button>
+                </div>
+            {% else %}
+                <p class="text-center text-gray-500 text-lg">カートは空です。</p>
+                <div class="text-center mt-6">
+                    <a href="{{ url_for('index') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full inline-block transition duration-300">
+                        商品を探しに行く
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <div class="fixed top-4 right-4 z-50">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="bg-{{ 'green' if category == 'success' else 'red' if category == 'danger' else 'blue' }}-500 text-white p-3 rounded-lg shadow-md mb-2">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <footer class="bg-gray-800 text-white p-6 mt-10">
+        <div class="container mx-auto text-center text-sm">
+            © 2025 新鮮野菜マルシェ. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // カートからの削除機能
+            document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const cartItemId = event.target.dataset.cartItemId;
+                    if (!confirm('この商品をカートから削除しますか？')) {
+                        return; // キャンセルされたら何もしない
+                    }
+
+                    try {
+                        const response = await fetch('/remove_from_cart', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ cart_item_id: parseInt(cartItemId) }),
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            alert(result.message);
+                            location.reload(); // ページをリロードしてカートを更新
+                        } else {
+                            alert(`エラー: ${result.message}`);
+                            if (response.status === 401) {
+                                window.location.href = '{{ url_for("consumer_login") }}';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error removing from cart:', error);
+                        alert('カートからの削除中にエラーが発生しました。');
+                    }
+                });
+            });
+
+            // フラッシュメッセージを自動で消す
+            const flashMessages = document.querySelectorAll('.fixed.top-4.right-4 > div');
+            flashMessages.forEach(msg => {
+                setTimeout(() => {
+                    msg.remove();
+                }, 5000); // 5秒後に消える
+            });
+        });
+    </script>
+</body>
+</html>
