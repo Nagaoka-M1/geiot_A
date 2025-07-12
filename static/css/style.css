@@ -25,13 +25,23 @@ body {
     background: #555;
 }
 
+.profile-body {
+    font-family: sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    padding-bottom: 80px; /* ボタンがコンテンツに隠れないように余白を追加 */
+}
 /* Profile Page Styles */
 .profile-container {
     background-color: #fff;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    max-width: 500px;
+    max-width: 368px;
     margin: 20px;
 }
 
