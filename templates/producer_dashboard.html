@@ -49,7 +49,7 @@
                         <li><a href="{{ url_for('producer_profile') }}" class="hover:text-green-200 transition duration-300">プロフィール</a></li>
                     {% else %}
                         <li><a href="{{ url_for('producer_login') }}" class="hover:text-green-200 transition duration-300">生産者ログイン</a></li>
-                        <li><a href="{{ url_for('producer_register') }}" class="hover:text-green-200 transition duration-300">生産者登録</a></li> {# ここに新しいリンクを追加 #}
+                        <li><a href="{{ url_for('producer_register') }}" class="hover:text-green-200 transition duration-300">生産者登録</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -104,7 +104,7 @@
 
         <div id="profileEditContent" class="tab-content bg-white p-8 rounded-xl shadow-lg mb-8 hidden">
             <h3 class="text-2xl font-bold text-green-700 mb-6">プロフィール編集</h3>
-            <form id="profileEditForm" action="{{ url_for('producer_edit_profile') }}" method="POST">
+            <form id="profileEditForm" action="{{ url_for('producer_edit_profile') }}" method="POST" enctype="multipart/form-data"> {# enctype を追加 #}
                 <div class="mb-4">
                     <label for="producerName" class="block text-gray-700 text-sm font-bold mb-2">生産者名:</label>
                     <input type="text" id="producerName" name="account_name" value="{{ producer.account_name }}" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: 山田農園" required>
@@ -114,12 +114,20 @@
                     <textarea id="producerBio" name="bio" rows="5" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="農園の紹介や野菜へのこだわりを入力してください。" required>{{ producer.bio }}</textarea>
                 </div>
                 <div class="mb-6">
-                    <label for="profileImageURL" class="block text-gray-700 text-sm font-bold mb-2">プロフィール画像URL:</label>
-                    <input type="text" id="profileImageURL" name="profile_image" value="{{ producer.profile_image }}" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: https://example.com/profile.jpg">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">現在のプロフィール画像:</label>
+                    {% if producer.profile_image %}
+                        <img src="{{ producer.profile_image }}" alt="現在のプロフィール画像" class="w-24 h-24 object-cover rounded-full mb-3 shadow-md">
+                    {% else %}
+                        <p class="text-gray-500 text-sm mb-3">画像が設定されていません。</p>
+                    {% endif %}
+                    
+                    <label for="profileImageFile" class="block text-gray-700 text-sm font-bold mb-2">新しいプロフィール画像をアップロード:</label> {# ここを修正 #}
+                    <input type="file" id="profileImageFile" name="profile_image_file" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"> {# ここを修正 #}
+                    <p class="text-xs text-gray-500 mt-1">※画像を選択した場合、現在の画像は上書きされます。</p>
                 </div>
                 <div class="mb-6">
                     <label for="youtubeVideoURL" class="block text-gray-700 text-sm font-bold mb-2">YouTube動画URL:</label>
-                    <input type="text" id="youtubeVideoURL" name="youtube_video" value="{{ producer.youtube_video }}" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: https://www.youtube.com/watch?v=xxxxxxxxxxx">
+                    <input type="text" id="youtubeVideoURL" name="youtube_video" value="{{ producer.youtube_video }}" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: https://www.youtube.com/embed/VIDEO_ID"> {# プレースホルダーを更新 #}
                 </div>
 
                 <div class="flex items-center justify-between">
@@ -221,8 +229,7 @@
             }
         });
 
-        // プロフィール編集フォームの送信ハンドラ (デモから実際のフォーム送信に戻す)
-        // Flaskで直接処理するため、JavaScriptでのfetchは不要（action属性とmethod属性でOK）
+        // プロフィール編集フォームの送信ハンドラ (enctype="multipart/form-data" を使用するため、JavaScriptでのfetchは不要)
         // ただし、flashメッセージ表示のためにJavaScriptの自動消去ロジックは残す
         document.getElementById('profileEditForm').addEventListener('submit', function(event) {
             // alertは不要、Flaskのflashメッセージで表示される

@@ -38,7 +38,7 @@ class Producer(db.Model):
     password = db.Column(db.String(200), nullable=False)
     account_name = db.Column(db.String(100), nullable=False)
     bio = db.Column(db.String(1000), nullable=False)
-    profile_image = db.Column(db.String(200), nullable=True)
+    profile_image = db.Column(db.String(200), nullable=True) # 画像URLを保存
     youtube_video = db.Column(db.String(200), nullable=True)
     products = db.relationship('Product', backref='producer', lazy=True, cascade="all, delete-orphan")
 
@@ -68,13 +68,49 @@ with app.app_context():
 with app.app_context():
     producer1 = Producer.query.filter_by(username='tachi_farm').first()
     if not producer1:
+        # 新しい初期プロフィール画像を static/uploads に保存する例
+        default_profile_image_filename = 'default_producer_profile.jpg'
+        default_profile_image_path = os.path.join(app.config['UPLOAD_FOLDER'], default_profile_image_filename)
+        # ダミー画像ファイルを生成 (もし存在しなければ)
+        if not os.path.exists(default_profile_image_path):
+            from PIL import Image, ImageDraw, ImageFont # Pillow ライブラリが必要
+            try:
+                img = Image.new('RGB', (400, 400), color = (76, 175, 80)) # Green-500
+                d = ImageDraw.Draw(img)
+                # フォントのパスは環境によって異なる可能性があります
+                try:
+                    font = ImageFont.truetype("arial.ttf", 80) # Windows
+                except IOError:
+                    try:
+                        font = ImageFont.truetype("/Library/Fonts/Arial.ttf", 80) # macOS
+                    except IOError:
+                        font = ImageFont.load_default() # Fallback
+                
+                text = "P" # ProducerのP
+                text_bbox = d.textbbox((0,0), text, font=font)
+                text_width = text_bbox[2] - text_bbox[0]
+                text_height = text_bbox[3] - text_bbox[1]
+                
+                x = (400 - text_width) / 2
+                y = (400 - text_height) / 2
+                d.text((x, y), text, fill=(255, 255, 255), font=font)
+                img.save(default_profile_image_path)
+            except ImportError:
+                print("Pillow library not found. Please install it with 'pip install Pillow' to generate default image.")
+                # Pillowがない場合は、手動で画像を配置するか、他のデフォルトURLを設定
+                # 仮のURLを設定し、ユーザーに手動で画像をアップロードしてもらう
+                pass 
+        
+        profile_image_url = url_for('static', filename=f'uploads/{default_profile_image_filename}') if os.path.exists(default_profile_image_path) else 'https://via.placeholder.com/120/CCCCCC/FFFFFF?text=No+Image'
+
+
         producer1 = Producer(
             username='tachi_farm',
             password=generate_password_hash('password123'),
             account_name='立花考志',
             bio='日本のトランプです。',
-            profile_image='https://pbs.twimg.com/profile_images/1930450937124139008/3akLDAFa_400x400.jpg',
-            youtube_video='https://www.youtube.com/embed/dQw4w9WgXcQ' # サンプル動画URLを埋め込み形式に
+            profile_image=profile_image_url, # 生成したURLを使用
+            youtube_video='https://www.youtube.com/embed/M0000000000' # サンプル動画URLを埋め込み形式に
         )
         db.session.add(producer1)
         db.session.commit()
@@ -86,11 +122,14 @@ with app.app_context():
             db.session.commit()
         # YouTube動画URLがまだ更新されていなければ、埋め込み形式に更新
         if not producer1.youtube_video or not producer1.youtube_video.startswith('https://www.youtube.com/embed/'):
-             producer1.youtube_video = 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+             producer1.youtube_video = 'https://www.youtube.com/embed/M0000000000'
              db.session.commit()
+        # プロフィール画像が設定されていなければ、デフォルトを設定 (必要であれば)
+        if not producer1.profile_image:
+            # ここでデフォルト画像を再設定するかは要検討。通常は登録時に設定される。
+            pass
 
 
-    # 初期の商品データに producer_id を関連付ける
     if not Product.query.first():
         products_data = [
             {'name': '新鮮トマト', 'price': 300, 'description': '甘くてみずみずしい採れたてトマト。', 'image_url': 'https://via.placeholder.com/150/FF6347/FFFFFF?text=Tomato', 'producer_id': producer1.id},
@@ -104,8 +143,6 @@ with app.app_context():
         db.session.commit()
 
 # 生産者用プロフィール表示ページ (既存の/producer/profileを動的に変更)
-# 注意: このルートは、ログイン中の生産者自身のプロフィールを表示するためのものとして扱います。
-# 個別の生産者の公開プロフィールは /producer/<int:producer_id> に移します。
 @app.route('/producer/profile')
 def producer_profile():
     if 'producer_id' not in session:
@@ -118,7 +155,7 @@ def producer_profile():
         session.pop('producer_id', None)
         return redirect(url_for('producer_login'))
         
-    return render_template('preview_profile.html', producer=producer) # preview_profile.html を使用
+    return render_template('preview_profile.html', producer=producer)
 
 # 個別の生産者の公開プロフィールページ (新しいルート)
 @app.route('/producer/<int:producer_id>')
@@ -126,8 +163,8 @@ def view_producer_profile(producer_id):
     producer = Producer.query.get(producer_id)
     if not producer:
         flash('指定された生産者が見つかりません。', 'danger')
-        return redirect(url_for('index')) # またはエラーページへリダイレクト
-    return render_template('public_producer_profile.html', producer=producer) # 新しいテンプレートを使用
+        return redirect(url_for('index'))
+    return render_template('public_producer_profile.html', producer=producer)
 
 
 # 生産者用プロフィール編集ページ
@@ -146,9 +183,20 @@ def producer_edit_profile():
     if request.method == 'POST':
         producer.account_name = request.form['account_name']
         producer.bio = request.form['bio']
-        producer.profile_image = request.form['profile_image']
         producer.youtube_video = request.form['youtube_video']
         
+        profile_image_file = request.files.get('profile_image_file') # ファイルを受け取るための新しい名前
+
+        # プロフィール画像のファイルがアップロードされた場合
+        if profile_image_file and allowed_file(profile_image_file.filename):
+            filename = str(uuid.uuid4()) + os.path.splitext(profile_image_file.filename)[1]
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            profile_image_file.save(filepath)
+            producer.profile_image = url_for('static', filename=f'uploads/{filename}')
+        # ファイルがアップロードされず、かつ既存の画像URLもクリアしたい場合 (オプション)
+        # elif not profile_image_file and 'profile_image_file' in request.files and not request.form.get('current_profile_image_url'):
+        #     producer.profile_image = None # 画像を削除するロジック
+
         db.session.commit()
         
         flash('プロフィールが更新されました。', 'success')
@@ -182,7 +230,9 @@ def producer_register():
         password_confirm = request.form['password_confirm']
         account_name = request.form['account_name']
         bio = request.form.get('bio', '')
-        profile_image = request.form.get('profile_image', '')
+        # 登録時にはプロフィール画像のファイルアップロードは受け付けない（URLは可能）
+        # もし登録時にファイルアップロードもさせたい場合は、`request.files.get('profile_image_file')`を処理
+        profile_image_url_input = request.form.get('profile_image', '')
         youtube_video = request.form.get('youtube_video', '')
 
         if password != password_confirm:
@@ -199,7 +249,7 @@ def producer_register():
             password=hashed_password,
             account_name=account_name,
             bio=bio,
-            profile_image=profile_image,
+            profile_image=profile_image_url_input, # ここはURLを受け取るか、上記でファイル処理
             youtube_video=youtube_video
         )
         db.session.add(new_producer)
@@ -372,7 +422,6 @@ def remove_from_cart():
 # メインページ
 @app.route('/')
 def index():
-    # 商品とその生産者情報を一度に取得 (joinedloadを使用)
     products = Product.query.options(db.joinedload(Product.producer)).all()
     return render_template('index.html', products=products)
 
@@ -407,4 +456,10 @@ def producer_dashboard():
     return render_template('producer_dashboard.html', producer=producer)
 
 if __name__ == '__main__':
+    # Pillow がインストールされていない場合は警告を表示
+    try:
+        import PIL
+    except ImportError:
+        print("\nWARNING: Pillow library is not installed. Default profile image generation may fail.")
+        print("Please install it with 'pip install Pillow' for full functionality.\n")
     app.run(debug=True)
