@@ -4,6 +4,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
 import uuid
+from PIL import Image, ImageDraw, ImageFont # Pillow ライブラリをインポート
+import shutil # ファイルコピーのためにインポート
 
 app = Flask(__name__)
 
@@ -63,84 +65,6 @@ def allowed_file(filename):
 
 with app.app_context():
     db.create_all()
-
-# 初期データを追加（もしデータが空の場合）
-with app.app_context():
-    producer1 = Producer.query.filter_by(username='tachi_farm').first()
-    if not producer1:
-        # 新しい初期プロフィール画像を static/uploads に保存する例
-        default_profile_image_filename = 'default_producer_profile.jpg'
-        default_profile_image_path = os.path.join(app.config['UPLOAD_FOLDER'], default_profile_image_filename)
-        # ダミー画像ファイルを生成 (もし存在しなければ)
-        if not os.path.exists(default_profile_image_path):
-            from PIL import Image, ImageDraw, ImageFont # Pillow ライブラリが必要
-            try:
-                img = Image.new('RGB', (400, 400), color = (76, 175, 80)) # Green-500
-                d = ImageDraw.Draw(img)
-                # フォントのパスは環境によって異なる可能性があります
-                try:
-                    font = ImageFont.truetype("arial.ttf", 80) # Windows
-                except IOError:
-                    try:
-                        font = ImageFont.truetype("/Library/Fonts/Arial.ttf", 80) # macOS
-                    except IOError:
-                        font = ImageFont.load_default() # Fallback
-                
-                text = "P" # ProducerのP
-                text_bbox = d.textbbox((0,0), text, font=font)
-                text_width = text_bbox[2] - text_bbox[0]
-                text_height = text_bbox[3] - text_bbox[1]
-                
-                x = (400 - text_width) / 2
-                y = (400 - text_height) / 2
-                d.text((x, y), text, fill=(255, 255, 255), font=font)
-                img.save(default_profile_image_path)
-            except ImportError:
-                print("Pillow library not found. Please install it with 'pip install Pillow' to generate default image.")
-                # Pillowがない場合は、手動で画像を配置するか、他のデフォルトURLを設定
-                # 仮のURLを設定し、ユーザーに手動で画像をアップロードしてもらう
-                pass 
-        
-        profile_image_url = url_for('static', filename=f'uploads/{default_profile_image_filename}') if os.path.exists(default_profile_image_path) else 'https://via.placeholder.com/120/CCCCCC/FFFFFF?text=No+Image'
-
-
-        producer1 = Producer(
-            username='tachi_farm',
-            password=generate_password_hash('password123'),
-            account_name='立花考志',
-            bio='日本のトランプです。',
-            profile_image=profile_image_url, # 生成したURLを使用
-            youtube_video='https://www.youtube.com/embed/M0000000000' # サンプル動画URLを埋め込み形式に
-        )
-        db.session.add(producer1)
-        db.session.commit()
-    else:
-        # 既存のプロデューサーに username と password がなければ追加（または更新）
-        if not producer1.username or not producer1.password:
-            producer1.username = 'tachi_farm'
-            producer1.password = generate_password_hash('password123')
-            db.session.commit()
-        # YouTube動画URLがまだ更新されていなければ、埋め込み形式に更新
-        if not producer1.youtube_video or not producer1.youtube_video.startswith('https://www.youtube.com/embed/'):
-             producer1.youtube_video = 'https://www.youtube.com/embed/M0000000000'
-             db.session.commit()
-        # プロフィール画像が設定されていなければ、デフォルトを設定 (必要であれば)
-        if not producer1.profile_image:
-            # ここでデフォルト画像を再設定するかは要検討。通常は登録時に設定される。
-            pass
-
-
-    if not Product.query.first():
-        products_data = [
-            {'name': '新鮮トマト', 'price': 300, 'description': '甘くてみずみずしい採れたてトマト。', 'image_url': 'https://via.placeholder.com/150/FF6347/FFFFFF?text=Tomato', 'producer_id': producer1.id},
-            {'name': 'ほうれん草', 'price': 200, 'description': '栄養満点、シャキシャキのほうれん草。', 'image_url': 'https://via.placeholder.com/150/228B22/FFFFFF?text=Spinach', 'producer_id': producer1.id},
-            {'name': '大根', 'price': 250, 'description': '煮物にもサラダにも万能な大根。', 'image_url': 'https://via.placeholder.com/150/ADD8E6/000000?text=Radish', 'producer_id': producer1.id},
-            {'name': 'キャベツ', 'price': 180, 'description': '炒め物や生で食べても美味しいキャベツ。', 'image_url': 'https://via.placeholder.com/150/3CB371/FFFFFF?text=Cabbage', 'producer_id': producer1.id},
-        ]
-        for data in products_data:
-            product = Product(**data)
-            db.session.add(product)
-        db.session.commit()
 
 # 生産者用プロフィール表示ページ (既存の/producer/profileを動的に変更)
 @app.route('/producer/profile')
@@ -229,11 +153,7 @@ def producer_register():
         password = request.form['password']
         password_confirm = request.form['password_confirm']
         account_name = request.form['account_name']
-        bio = request.form.get('bio', '')
-        # 登録時にはプロフィール画像のファイルアップロードは受け付けない（URLは可能）
-        # もし登録時にファイルアップロードもさせたい場合は、`request.files.get('profile_image_file')`を処理
-        profile_image_url_input = request.form.get('profile_image', '')
-        youtube_video = request.form.get('youtube_video', '')
+        bio = request.form.get('bio', '') 
 
         if password != password_confirm:
             flash('パスワードが一致しません', 'danger')
@@ -249,8 +169,8 @@ def producer_register():
             password=hashed_password,
             account_name=account_name,
             bio=bio,
-            profile_image=profile_image_url_input, # ここはURLを受け取るか、上記でファイル処理
-            youtube_video=youtube_video
+            profile_image=None,  # 初期値としてNoneを設定
+            youtube_video=None   # 初期値としてNoneを設定
         )
         db.session.add(new_producer)
         db.session.commit()
@@ -446,13 +366,13 @@ def producer_dashboard():
     if 'producer_id' not in session:
         flash('生産者としてログインしてください。', 'warning')
         return redirect(url_for('producer_login'))
-    
+
     producer = Producer.query.get(session['producer_id'])
     if not producer:
         flash('生産者アカウントが見つかりません。', 'danger')
         session.pop('producer_id', None)
         return redirect(url_for('producer_login'))
-        
+
     return render_template('producer_dashboard.html', producer=producer)
 
 if __name__ == '__main__':
