@@ -3,67 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>生産者ページ - 新鮮野菜マルシェ</title>
+    <title>生産者登録 - 新鮮野菜マルシェ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles for Inter font and general body styling */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7fafc; /* Light gray background */
-        }
-        /* Custom scrollbar for better aesthetics */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        /* Styles for active tab */
-        .tab-button.active {
-            background-color: #10B981; /* Green-500 */
-            color: white;
-            font-weight: bold;
+            background-color: #f0f4f8; /* やや明るい背景色 */
         }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
-    <header class="bg-green-700 text-white p-4 shadow-md">
-        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
-            <h1 class="text-3xl font-bold mb-2 md:mb-0">
-                <a href="/" class="hover:text-green-200 transition duration-300">新鮮野菜マルシェ</a>
-            </h1>
-            <nav>
-                <ul class="flex space-x-4">
-                    <li><a href="/" class="hover:text-green-200 transition duration-300">ホーム</a></li>
-                    <li><a href="{{ url_for('index') }}" class="hover:text-green-200 transition duration-300">商品一覧</a></li>
-                    {% if session.producer_id %}
-                        <li><a href="{{ url_for('producer_logout') }}" class="hover:text-green-200 transition duration-300">ログアウト (生産者)</a></li>
-                        <li><a href="{{ url_for('producer_profile') }}" class="hover:text-green-200 transition duration-300">プロフィール</a></li>
-                    {% else %}
-                        <li><a href="{{ url_for('producer_login') }}" class="hover:text-green-200 transition duration-300">生産者ログイン</a></li>
-                        <li><a href="{{ url_for('producer_register') }}" class="hover:text-green-200 transition duration-300">生産者登録</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
-        </div>
-    </header>
+<body class="flex flex-col min-h-screen bg-gray-100 items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-xl border border-gray-200">
+        <h2 class="text-3xl font-extrabold text-center text-green-700 mb-8">生産者アカウント登録</h2>
 
-    <main class="container mx-auto p-6 flex-grow">
-        <h2 class="text-4xl font-extrabold text-center text-green-800 mb-8">生産者ページ</h2>
-
-        <div class="fixed top-4 right-4 z-50">
+        <div class="mb-6">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="bg-{{ 'green' if category == 'success' else 'red' if category == 'danger' else 'blue' }}-500 text-white p-3 rounded-lg shadow-md mb-2">
+                        <div class="p-3 rounded-lg shadow-sm mb-2
+                            {% if category == 'success' %} bg-green-100 text-green-800 border border-green-200
+                            {% elif category == 'danger' %} bg-red-100 text-red-800 border border-red-200
+                            {% elif category == 'warning' %} bg-yellow-100 text-yellow-800 border border-yellow-200
+                            {% else %} bg-blue-100 text-blue-800 border border-blue-200
+                            {% endif %}">
                             {{ message }}
                         </div>
                     {% endfor %}
@@ -71,184 +33,68 @@
             {% endwith %}
         </div>
 
-        <div class="flex justify-center mb-8">
-            <button id="productFormTab" class="tab-button px-6 py-3 rounded-l-lg bg-gray-200 hover:bg-gray-300 transition duration-300 active">商品出品フォーム</button>
-            <button id="profileEditTab" class="tab-button px-6 py-3 bg-gray-200 hover:bg-gray-300 transition duration-300">プロフィール編集</button>
-            <button id="eventPostTab" class="tab-button px-6 py-3 rounded-r-lg bg-gray-200 hover:bg-gray-300 transition duration-300">イベント告知投稿</button>
-        </div>
+        <form action="{{ url_for('producer_register') }}" method="POST">
+            <div class="mb-5">
+                <label for="username" class="block text-gray-700 text-sm font-bold mb-2">ユーザー名:</label>
+                <input type="text" id="username" name="username"
+                       class="shadow-sm appearance-none border border-gray-300 rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                       placeholder="ログイン用ユーザー名" required autocomplete="username">
+            </div>
+            <div class="mb-5">
+                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">パスワード:</label>
+                <input type="password" id="password" name="password"
+                       class="shadow-sm appearance-none border border-gray-300 rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                       placeholder="パスワード" required autocomplete="new-password">
+            </div>
+            <div class="mb-6">
+                <label for="password_confirm" class="block text-gray-700 text-sm font-bold mb-2">パスワード (確認):</label>
+                <input type="password" id="password_confirm" name="password_confirm"
+                       class="shadow-sm appearance-none border border-gray-300 rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                       placeholder="パスワードをもう一度入力" required autocomplete="new-password">
+            </div>
+            <div class="mb-4">
+                <label for="account_name" class="block text-gray-700 text-sm font-bold mb-2">生産者名 (表示名):</label>
+                <input type="text" id="account_name" name="account_name"
+                       class="shadow-sm appearance-none border border-gray-300 rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                       placeholder="例: 山田農園" required>
+            </div>
+            <div class="mb-6">
+                <label for="bio" class="block text-gray-700 text-sm font-bold mb-2">自己紹介 (任意):</label>
+                <textarea id="bio" name="bio" rows="3"
+                          class="shadow-sm appearance-none border border-gray-300 rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="農園の紹介や野菜へのこだわり"></textarea>
+            </div>
+            {# 顔写真と動画の入力フィールドを削除 #}
+            {#
+            <div class="mb-4">
+                <label for="profile_image" class="block text-gray-700 text-sm font-bold mb-2">プロフィール画像URL (任意):</label>
+                <input type="text" id="profile_image" name="profile_image" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: https://example.com/your_profile.jpg">
+            </div>
+            <div class="mb-6">
+                <label for="youtube_video" class="block text-gray-700 text-sm font-bold mb-2">YouTube動画URL (任意):</label>
+                <input type="text" id="youtube_video" name="youtube_video" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: https://www.youtube.com/watch?v=...">
+            </div>
+            #}
 
-        <div id="productFormContent" class="tab-content bg-white p-8 rounded-xl shadow-lg mb-8">
-            <h3 class="text-2xl font-bold text-green-700 mb-6">商品出品フォーム</h3>
-            <form id="productListingForm" enctype="multipart/form-data">
-                <div class="mb-4">
-                    <label for="productName" class="block text-gray-700 text-sm font-bold mb-2">商品名:</label>
-                    <input type="text" id="productName" name="productName" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: 新鮮なトマト" required>
-                </div>
-                <div class="mb-4">
-                    <label for="productPrice" class="block text-gray-700 text-sm font-bold mb-2">価格 (円):</label>
-                    <input type="number" id="productPrice" name="productPrice" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: 350" min="0" required>
-                </div>
-                <div class="mb-4">
-                    <label for="productDescription" class="block text-gray-700 text-sm font-bold mb-2">商品説明:</label>
-                    <textarea id="productDescription" name="productDescription" rows="5" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="商品の特徴やこだわりを詳しく入力してください。" required></textarea>
-                </div>
-                <div class="mb-6">
-                    <label for="productImage" class="block text-gray-700 text-sm font-bold mb-2">商品画像:</label>
-                    <input type="file" id="productImage" name="productImage" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" required>
-                </div>
-                <div class="flex items-center justify-between">
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">商品を出品</button>
-                </div>
-            </form>
-        </div>
-
-        <div id="profileEditContent" class="tab-content bg-white p-8 rounded-xl shadow-lg mb-8 hidden">
-            <h3 class="text-2xl font-bold text-green-700 mb-6">プロフィール編集</h3>
-            <form id="profileEditForm" action="{{ url_for('producer_edit_profile') }}" method="POST" enctype="multipart/form-data"> {# enctype を追加 #}
-                <div class="mb-4">
-                    <label for="producerName" class="block text-gray-700 text-sm font-bold mb-2">生産者名:</label>
-                    <input type="text" id="producerName" name="account_name" value="{{ producer.account_name }}" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: 山田農園" required>
-                </div>
-                <div class="mb-4">
-                    <label for="producerBio" class="block text-gray-700 text-sm font-bold mb-2">自己紹介:</label>
-                    <textarea id="producerBio" name="bio" rows="5" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="農園の紹介や野菜へのこだわりを入力してください。" required>{{ producer.bio }}</textarea>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">現在のプロフィール画像:</label>
-                    {% if producer.profile_image %}
-                        <img src="{{ producer.profile_image }}" alt="現在のプロフィール画像" class="w-24 h-24 object-cover rounded-full mb-3 shadow-md">
-                    {% else %}
-                        <p class="text-gray-500 text-sm mb-3">画像が設定されていません。</p>
-                    {% endif %}
-                    
-                    <label for="profileImageFile" class="block text-gray-700 text-sm font-bold mb-2">新しいプロフィール画像をアップロード:</label> {# ここを修正 #}
-                    <input type="file" id="profileImageFile" name="profile_image_file" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"> {# ここを修正 #}
-                    <p class="text-xs text-gray-500 mt-1">※画像を選択した場合、現在の画像は上書きされます。</p>
-                </div>
-                <div class="mb-6">
-                    <label for="youtubeVideoURL" class="block text-gray-700 text-sm font-bold mb-2">YouTube動画URL:</label>
-                    <input type="text" id="youtubeVideoURL" name="youtube_video" value="{{ producer.youtube_video }}" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: https://www.youtube.com/embed/VIDEO_ID"> {# プレースホルダーを更新 #}
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">プロフィールを更新</button>
-                </div>
-            </form>
-        </div>
-
-        <div id="eventPostContent" class="tab-content bg-white p-8 rounded-xl shadow-lg mb-8 hidden">
-            <h3 class="text-2xl font-bold text-green-700 mb-6">イベント告知投稿</h3>
-            <form id="eventPostForm">
-                <div class="mb-4">
-                    <label for="eventTitle" class="block text-gray-700 text-sm font-bold mb-2">タイトル:</label>
-                    <input type="text" id="eventTitle" name="eventTitle" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="例: 収穫体験イベント開催！" required>
-                </div>
-                <div class="mb-4">
-                    <label for="eventDate" class="block text-gray-700 text-sm font-bold mb-2">開催日時:</label>
-                    <input type="datetime-local" id="eventDate" name="eventDate" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" required>
-                </div>
-                <div class="mb-4">
-                    <label for="eventDescription" class="block text-gray-700 text-sm font-bold mb-2">詳細:</label>
-                    <textarea id="eventDescription" name="eventDescription" rows="5" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-green-500" placeholder="イベントの詳細や参加方法を入力してください。" required></textarea>
-                </div>
-                <div class="flex items-center justify-between">
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105">イベントを投稿</button>
-                </div>
-            </form>
-        </div>
-    </main>
-
-    <footer class="bg-gray-800 text-white p-6 mt-10">
-        <div class="container mx-auto text-center text-sm">
-            © 2025 新鮮野菜マルシェ. All rights reserved.
-        </div>
-    </footer>
+            <div class="flex items-center justify-between mb-6">
+                <button type="submit"
+                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300 transform hover:scale-105 w-full">
+                    登録する
+                </button>
+            </div>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('producer_login') }}"
+                   class="inline-block align-baseline font-bold text-sm text-green-600 hover:text-green-800 transition duration-300">
+                    すでにアカウントをお持ちですか？ログインはこちら
+                </a>
+            </div>
+        </form>
+    </div>
 
     <script>
-        // Get tab buttons and content sections
-        const productFormTab = document.getElementById('productFormTab');
-        const profileEditTab = document.getElementById('profileEditTab');
-        const eventPostTab = document.getElementById('eventPostTab');
-
-        const productFormContent = document.getElementById('productFormContent');
-        const profileEditContent = document.getElementById('profileEditContent');
-        const eventPostContent = document.getElementById('eventPostContent');
-
-        // Get all tab buttons for easy iteration
-        const tabButtons = [productFormTab, profileEditTab, eventPostTab];
-        const tabContents = [productFormContent, profileEditContent, eventPostContent];
-
-        // Function to show a specific tab content and activate its button
-        function showTab(tabToShow, buttonToActivate) {
-            // Hide all tab contents
-            tabContents.forEach(content => content.classList.add('hidden'));
-            // Deactivate all tab buttons
-            tabButtons.forEach(button => button.classList.remove('active'));
-
-            // Show the selected tab content
-            tabToShow.classList.remove('hidden');
-            // Activate the selected tab button
-            buttonToActivate.classList.add('active');
-        }
-
-        // Add event listeners to tab buttons
-        productFormTab.addEventListener('click', () => showTab(productFormContent, productFormTab));
-        profileEditTab.addEventListener('click', () => showTab(profileEditContent, profileEditTab));
-        eventPostTab.addEventListener('click', () => showTab(eventPostContent, eventPostTab));
-
-
-        // 商品出品フォームの送信ハンドラを修正
-        document.getElementById('productListingForm').addEventListener('submit', async function(event) {
-            event.preventDefault(); // デフォルトのフォーム送信を防ぐ
-
-            const form = event.target;
-            const formData = new FormData(form); // FormDataオブジェクトを作成（ファイルを含むフォームデータを扱うため）
-
-            try {
-                const response = await fetch('/api/products', { // 新しいAPIエンドポイントへ送信
-                    method: 'POST',
-                    body: formData, // FormDataを直接bodyに指定すると、Content-Typeヘッダーは自動で multipart/form-data になる
-                });
-
-                const result = await response.json(); // サーバーからのJSONレスポンスを解析
-
-                if (response.ok) { // HTTPステータスコードが200番台の場合
-                    alert(result.message); // 成功メッセージを表示
-                    form.reset(); // フォームをクリア
-                    // 任意: 商品一覧ページをリロードするか、出品された商品を追加表示するロジック
-                } else {
-                    // エラーメッセージを表示
-                    alert(`エラー: ${result.message}`);
-                    if (response.status === 401) { // ログインが必要な場合
-                        window.location.href = '{{ url_for("producer_login") }}'; // 生産者ログインページへリダイレクト
-                    }
-                }
-            } catch (error) {
-                console.error('Error submitting product:', error);
-                alert('商品の出品中にエラーが発生しました。');
-            }
-        });
-
-        // プロフィール編集フォームの送信ハンドラ (enctype="multipart/form-data" を使用するため、JavaScriptでのfetchは不要)
-        // ただし、flashメッセージ表示のためにJavaScriptの自動消去ロジックは残す
-        document.getElementById('profileEditForm').addEventListener('submit', function(event) {
-            // alertは不要、Flaskのflashメッセージで表示される
-            // this.reset(); はリダイレクトでページがリロードされるため不要
-        });
-
-        // イベント告知投稿フォームの送信ハンドラ (デモのまま)
-        document.getElementById('eventPostForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            alert('イベント告知が投稿されました！ (デモ)');
-            this.reset(); // Clear the form
-        });
-
-        // Initial display: Show product form by default
+        // フラッシュメッセージを自動で消す
         document.addEventListener('DOMContentLoaded', () => {
-            showTab(productFormContent, productFormTab);
-
-            // フラッシュメッセージを自動で消す
-            const flashMessages = document.querySelectorAll('.fixed.top-4.right-4 > div');
+            const flashMessages = document.querySelectorAll('.mb-6 > div');
             flashMessages.forEach(msg => {
                 setTimeout(() => {
                     msg.remove();
