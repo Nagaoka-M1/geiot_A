@@ -25,27 +25,23 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Consumer, Producer, Product, CartItem モデルの定義 (変更なし)
-# 消費者モデル
+# Consumer, Producer, Product, CartItem モデルの定義
 class Consumer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     cart_items = db.relationship('CartItem', backref='consumer', lazy=True, cascade="all, delete-orphan")
 
-# 生産者モデル
 class Producer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False) # 新しく追加: ログイン用ユーザー名
-    password = db.Column(db.String(200), nullable=False) # 新しく追加: ログイン用パスワード
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
     account_name = db.Column(db.String(100), nullable=False)
     bio = db.Column(db.String(1000), nullable=False)
     profile_image = db.Column(db.String(200), nullable=True)
     youtube_video = db.Column(db.String(200), nullable=True)
     products = db.relationship('Product', backref='producer', lazy=True, cascade="all, delete-orphan")
 
-
-# 商品モデル
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -55,45 +51,44 @@ class Product(db.Model):
     producer_id = db.Column(db.Integer, db.ForeignKey('producer.id'), nullable=False)
     cart_items = db.relationship('CartItem', backref='product', lazy=True, cascade="all, delete-orphan")
 
-# カートアイテムモデル
 class CartItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     consumer_id = db.Column(db.Integer, db.ForeignKey('consumer.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
     quantity = db.Column(db.Integer, default=1, nullable=False)
 
-
-# ファイルの拡張子をチェックするヘルパー関数
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# アプリケーションコンテキストを手動で開始（データベース作成）
 with app.app_context():
     db.create_all()
 
 # 初期データを追加（もしデータが空の場合）
 with app.app_context():
-    # 生産者データの追加 (初期データはアカウント名のみで、ログイン情報なし)
-    # 既存の生産者データに username と password フィールドを追加
-    producer1 = Producer.query.first()
+    producer1 = Producer.query.filter_by(username='tachi_farm').first()
     if not producer1:
         producer1 = Producer(
-            username='tachi_farm', # 仮のユーザー名
-            password=generate_password_hash('password123'), # 仮のパスワード
+            username='tachi_farm',
+            password=generate_password_hash('password123'),
             account_name='立花考志',
             bio='日本のトランプです。',
             profile_image='https://pbs.twimg.com/profile_images/1930450937124139008/3akLDAFa_400x400.jpg',
-            youtube_video='https://www.youtube.com/embed/nf12HjJd4g0?si=RinXHtxi7Ogq5yuH'
+            youtube_video='https://www.youtube.com/embed/dQw4w9WgXcQ' # サンプル動画URLを埋め込み形式に
         )
         db.session.add(producer1)
         db.session.commit()
     else:
-        # 既存のプロデューサーに username と password がなければ追加
-        if not producer1.username:
+        # 既存のプロデューサーに username と password がなければ追加（または更新）
+        if not producer1.username or not producer1.password:
             producer1.username = 'tachi_farm'
             producer1.password = generate_password_hash('password123')
             db.session.commit()
+        # YouTube動画URLがまだ更新されていなければ、埋め込み形式に更新
+        if not producer1.youtube_video or not producer1.youtube_video.startswith('https://www.youtube.com/embed/'):
+             producer1.youtube_video = 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+             db.session.commit()
+
 
     # 初期の商品データに producer_id を関連付ける
     if not Product.query.first():
@@ -108,11 +103,11 @@ with app.app_context():
             db.session.add(product)
         db.session.commit()
 
-
-# 生産者用プロフィール表示ページ
+# 生産者用プロフィール表示ページ (既存の/producer/profileを動的に変更)
+# 注意: このルートは、ログイン中の生産者自身のプロフィールを表示するためのものとして扱います。
+# 個別の生産者の公開プロフィールは /producer/<int:producer_id> に移します。
 @app.route('/producer/profile')
 def producer_profile():
-    # ログインしている生産者のプロフィールを表示
     if 'producer_id' not in session:
         flash('生産者としてログインしてください。', 'warning')
         return redirect(url_for('producer_login'))
@@ -123,7 +118,16 @@ def producer_profile():
         session.pop('producer_id', None)
         return redirect(url_for('producer_login'))
         
-    return render_template('preview_profile.html', producer=producer)
+    return render_template('preview_profile.html', producer=producer) # preview_profile.html を使用
+
+# 個別の生産者の公開プロフィールページ (新しいルート)
+@app.route('/producer/<int:producer_id>')
+def view_producer_profile(producer_id):
+    producer = Producer.query.get(producer_id)
+    if not producer:
+        flash('指定された生産者が見つかりません。', 'danger')
+        return redirect(url_for('index')) # またはエラーページへリダイレクト
+    return render_template('public_producer_profile.html', producer=producer) # 新しいテンプレートを使用
 
 
 # 生産者用プロフィール編集ページ
@@ -153,7 +157,7 @@ def producer_edit_profile():
     return render_template('edit_profile.html', producer=producer)
 
 # 生産者ログインページ
-@app.route('/producer/login', methods=['GET', 'POST']) # ルートを /producer/login に変更
+@app.route('/producer/login', methods=['GET', 'POST'])
 def producer_login():
     if request.method == 'POST':
         username = request.form['username']
@@ -176,10 +180,10 @@ def producer_register():
         username = request.form['username']
         password = request.form['password']
         password_confirm = request.form['password_confirm']
-        account_name = request.form['account_name'] # 新しく追加: アカウント名も登録時に受け取る
-        bio = request.form.get('bio', '') # オプション: 自己紹介
-        profile_image = request.form.get('profile_image', '') # オプション: プロフィール画像URL
-        youtube_video = request.form.get('youtube_video', '') # オプション: YouTube動画URL
+        account_name = request.form['account_name']
+        bio = request.form.get('bio', '')
+        profile_image = request.form.get('profile_image', '')
+        youtube_video = request.form.get('youtube_video', '')
 
         if password != password_confirm:
             flash('パスワードが一致しません', 'danger')
@@ -204,10 +208,10 @@ def producer_register():
         flash('生産者アカウントが作成されました。ログインしてください。', 'success')
         return redirect(url_for('producer_login'))
 
-    return render_template('producer_register.html') # 新しいテンプレートを作成
+    return render_template('producer_register.html')
 
 
-@app.route('/producer/logout') # ルートを /producer/logout に変更
+@app.route('/producer/logout')
 def producer_logout():
     session.pop('producer_id', None)
     flash('生産者アカウントからログアウトしました。', 'info')
@@ -368,7 +372,8 @@ def remove_from_cart():
 # メインページ
 @app.route('/')
 def index():
-    products = Product.query.all()
+    # 商品とその生産者情報を一度に取得 (joinedloadを使用)
+    products = Product.query.options(db.joinedload(Product.producer)).all()
     return render_template('index.html', products=products)
 
 # カート表示ページ
@@ -379,7 +384,7 @@ def view_cart():
         return redirect(url_for('consumer_login'))
 
     consumer_id = session['consumer_id']
-    cart_items = CartItem.query.filter_by(consumer_id=consumer_id).all()
+    cart_items = CartItem.query.filter_by(consumer_id=consumer_id).options(db.joinedload(CartItem.product)).all()
     
     total_price = sum(item.product.price * item.quantity for item in cart_items)
 

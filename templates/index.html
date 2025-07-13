@@ -18,9 +18,10 @@
                     <li><a href="#" class="hover:text-green-200 transition duration-300">商品一覧</a></li>
                     {% if session.consumer_id %}
                         <li><a href="{{ url_for('consumer_logout') }}" class="hover:text-green-200 transition duration-300">ログアウト</a></li>
-                        <li><a href="{{ url_for('view_cart') }}" class="hover:text-green-200 transition duration-300">カート</a></li> {# カートへのリンクを追加 #}
+                        <li><a href="{{ url_for('view_cart') }}" class="hover:text-green-200 transition duration-300">カート</a></li>
                     {% else %}
                         <li><a href="{{ url_for('consumer_login') }}" class="hover:text-green-200 transition duration-300">サインイン</a></li>
+                        <li><a href="{{ url_for('consumer_register') }}" class="hover:text-green-200 transition duration-300">新規登録</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -45,7 +46,7 @@
 
         <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {% for product in products %}
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105" data-product-id="{{ product.id }}">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 relative">
                 <img src="{{ product.image_url }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
                 <div class="p-5">
                     <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ product.name }}</h3>
@@ -66,6 +67,16 @@
                         </button>
                     </div>
                 </div>
+                {# 生産者アイコンをここに追加 #}
+                {% if product.producer %}
+                <a href="{{ url_for('view_producer_profile', producer_id=product.producer.id) }}"
+                   class="absolute top-3 left-3 bg-white rounded-full p-1 shadow-md hover:scale-110 transition duration-200 z-10"> {# ここを修正: bottom-3 -> top-3 #}
+                    <img src="{{ product.producer.profile_image }}"
+                         alt="{{ product.producer.account_name }}"
+                         class="w-12 h-12 rounded-full object-cover border-2 border-green-500">
+                    {# <span class="sr-only">{{ product.producer.account_name }}</span> #}
+                </a>
+                {% endif %}
             </div>
             {% endfor %}
             {% if not products %}
@@ -106,7 +117,7 @@
     </div>
 
     <div class="text-center mb-8">
-        <a href="{{ url_for('producer_dashboard') }}" {# ここを修正 #}
+        <a href="{{ url_for('producer_dashboard') }}"
         class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 inline-block">
             生産者はこちら
         </a>
